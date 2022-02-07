@@ -16,7 +16,6 @@ public class ListMessage implements CloudMessage {
         files = Files.list(path)
                 .map(p -> p.getFileName().toString())
                 .collect(Collectors.toList());
-
     }
 
     @Override

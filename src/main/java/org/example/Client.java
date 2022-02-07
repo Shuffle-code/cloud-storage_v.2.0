@@ -1,6 +1,5 @@
 package org.example;
 
-import com.sun.xml.internal.bind.v2.schemagen.xmlschema.List;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.serialization.ObjectDecoderInputStream;
 import io.netty.handler.codec.serialization.ObjectEncoderOutputStream;

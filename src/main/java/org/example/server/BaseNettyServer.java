@@ -35,9 +35,6 @@ public class BaseNettyServer {
         } finally {
             auth.shutdownGracefully();
             worker.shutdownGracefully();
-
         }
-
-
     }
 }

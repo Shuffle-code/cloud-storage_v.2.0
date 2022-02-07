@@ -10,10 +10,8 @@ public class CloudServer extends BaseNettyServer{
                 new ObjectDecoder(ClassResolvers.cacheDisabled(null)),
                 new ObjectEncoder(),
                 new CloudServerHandler()
-
         );
     }
-
     public static void main(String[] args) {
         new CloudServer();
     }
