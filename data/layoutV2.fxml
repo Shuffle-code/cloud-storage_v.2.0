@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<SplitPane dividerPositions="0.4449275362318841" maxHeight="-Infinity" maxWidth="-Infinity"
+           minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0"
+           prefWidth="692.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="org.example.Client">
+  <items>
+    <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="398.0" prefWidth="280.0">
+         <children>
+            <ListView fx:id="clientView" layoutX="7.0" layoutY="51.0" prefHeight="203.0" prefWidth="286.0" />
+            <Button layoutX="260.0" layoutY="14.0" mnemonicParsing="false" onAction="#pathDownClient" prefHeight="25.0" prefWidth="32.0" text="🔝" />
+            <TextField fx:id="textFieldClient" layoutX="6.0" layoutY="14.0" prefHeight="25.0" prefWidth="248.0" />
+            <ToolBar layoutX="6.0" layoutY="262.0" prefHeight="40.0" prefWidth="286.0">
+              <items>
+                <Button mnemonicParsing="false" prefHeight="25.0" prefWidth="87.0" text="Copy" />
+                  <Button mnemonicParsing="false" prefHeight="25.0" prefWidth="89.0" text="Delete" />
+                  <Button mnemonicParsing="false" prefHeight="25.0" prefWidth="89.0" text="Rename" />
+              </items>
+            </ToolBar>
+            <Button layoutX="217.0" layoutY="318.0" mnemonicParsing="false" onAction="#upload" text="Отправить" />
+            <Button layoutX="217.0" layoutY="359.0" mnemonicParsing="false" onAction="#download" prefHeight="25.0" prefWidth="75.0" text="Загрузить" />
+         </children></AnchorPane>
+    <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="398.0" prefWidth="376.0">
+         <children>
+            <ListView fx:id="serverView" layoutX="11.0" layoutY="53.0" prefHeight="331.0" prefWidth="353.0" />
+            <TextField fx:id="textFieldServer" layoutX="14.0" layoutY="14.0" prefHeight="25.0" prefWidth="311.0" />
+            <Button layoutX="334.0" layoutY="14.0" mnemonicParsing="false" onAction="#pathDownServer" prefHeight="25.0" prefWidth="32.0" text="🔝🔝" />
+         </children></AnchorPane>
+  </items>
+</SplitPane>
