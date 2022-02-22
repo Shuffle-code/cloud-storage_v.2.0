@@ -10,9 +10,12 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 
 public class BaseNettyServer {
+//    private AuthServer authServer;
+
     public BaseNettyServer(ChannelHandler... handlers) {
         EventLoopGroup auth = new NioEventLoopGroup(1);
         EventLoopGroup worker = new NioEventLoopGroup();
+//        this.authServer = new AuthServer();
 
         try {
             ServerBootstrap bootstrap = new ServerBootstrap();

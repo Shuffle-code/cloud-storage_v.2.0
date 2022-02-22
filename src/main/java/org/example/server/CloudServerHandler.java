@@ -12,11 +12,14 @@ import java.nio.file.Paths;
 public class CloudServerHandler extends SimpleChannelInboundHandler<CloudMessage> {
 
     private Path currentDir;
+    private String login;
+    private Path serverDir;
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         currentDir = Paths.get("data");
         sendList(ctx);
+
     }
 
     @Override
@@ -32,6 +35,12 @@ public class CloudServerHandler extends SimpleChannelInboundHandler<CloudMessage
             case PATH_REQUEST:
                 processPathRequest((ChangePath) cloudMessage, ctx);
                 break;
+            case AUTH:
+                processAuthorization((AuthMessage) cloudMessage);
+
+
+
+
         }
     }
 
@@ -55,4 +64,11 @@ public class CloudServerHandler extends SimpleChannelInboundHandler<CloudMessage
         Path path = currentDir.resolve(cloudMessage.getFileName());
         ctx.writeAndFlush(new FileMessage(path));
     }
+    private void processAuthorization(AuthMessage authMessage) {
+        login = authMessage.getLogin();
+        serverDir = Paths.get(currentDir + "\\" + login);
+
+    }
+
+
 }

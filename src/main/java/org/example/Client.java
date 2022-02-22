@@ -112,11 +112,16 @@ public class Client implements Initializable {
     }
 
     public void pathDownServer() throws IOException {
-        os.writeObject(new ChangePath(serverDir.resolve("..").normalize().toString()));
-        serverDir = serverDir.resolve("..").normalize();
-        textFieldServer.clear();
-        textFieldServer.setText(serverDir.toString());
-        System.out.println(serverDir.resolve("..").normalize().toString());
+        if(serverDir.toString().equals(Paths.get("data").toAbsolutePath().toString())){
+            textFieldServer.clear();
+            textFieldServer.setText(serverDir.toString());
+        } else {
+            os.writeObject(new ChangePath(serverDir.resolve("..").normalize().toString()));
+            serverDir = serverDir.resolve("..").normalize();
+            textFieldServer.clear();
+            textFieldServer.setText(serverDir.toString());
+//            System.out.println(serverDir.resolve("..").normalize().toString());
+        }
 
     }
 
@@ -124,11 +129,9 @@ public class Client implements Initializable {
         clientView.setOnMouseClicked(e -> {
             if (e.getClickCount() == 2) {
                 Path current = clientDir.resolve(getItem());
-                if (getItem() != null) {
-                    if (Files.isDirectory(current)) {
-                        clientDir = current;
-                        Platform.runLater(this::updateClientView);
-                    }
+              if (Files.isDirectory(current)) {
+                    clientDir = current;
+                    Platform.runLater(this::updateClientView);
                 }
             }
         });
