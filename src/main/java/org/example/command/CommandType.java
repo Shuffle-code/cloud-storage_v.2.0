@@ -6,5 +6,9 @@ public enum CommandType {
     LIST,
     PATH_REQUEST,
     AUTH,
-    REGISTRATION
+    REGISTRATION,
+    DELETE,
+    CREATE,
+    REG_RESPONSE,
+    AUTH_RESPONSE
 }

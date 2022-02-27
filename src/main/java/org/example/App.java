@@ -27,23 +27,4 @@ public class App extends Application {
         primaryStage.show();
     }
 
-    public static Stage getPrimaryStage() {
-        return primaryStage;
-    }
-
-    public static String getPreviousWindow() {
-        return previousWindow;
-    }
-
-    public static void setPreviousWindow(String window) {
-        previousWindow = window;
-    }
-
-    public static Path getCurrentFolder() {
-        return currentFolder;
-    }
-
-    public static void setCurrentFolder(Path folder) {
-        currentFolder = folder;
-    }
 }

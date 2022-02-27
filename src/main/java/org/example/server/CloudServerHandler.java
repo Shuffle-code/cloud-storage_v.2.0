@@ -11,13 +11,22 @@ import java.nio.file.Paths;
 
 public class CloudServerHandler extends SimpleChannelInboundHandler<CloudMessage> {
 
-    private Path currentDir;
+    private static Path pathServer;
+    private final Path pathRoot = Paths.get("data");
     private String login;
-    private Path serverDir;
+    AuthServer authServer = new AuthServer();
+
+
+
+
+    public void setPathServer(Path pathServer) {
+        this.pathServer = pathServer;
+    }
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        currentDir = Paths.get("data");
+//        pathServer = Paths.get(pathRoot + "\\" + login);
+        System.out.println(pathServer + " - Path*");
         sendList(ctx);
 
     }
@@ -36,39 +45,65 @@ public class CloudServerHandler extends SimpleChannelInboundHandler<CloudMessage
                 processPathRequest((ChangePath) cloudMessage, ctx);
                 break;
             case AUTH:
-                processAuthorization((AuthMessage) cloudMessage);
-
-
+                processAuthorization((AuthMessage) cloudMessage, ctx);
+                break;
+            case REGISTRATION:
+                processRegistration((RegistrationMessage) cloudMessage, ctx);
 
 
         }
     }
 
     private void processPathRequest(ChangePath cloudMessage, ChannelHandlerContext ctx) throws IOException {
-        Path serverDir = currentDir.resolve(cloudMessage.getDirName()).normalize();
-        if (Files.isDirectory(serverDir)) {
-            currentDir = serverDir;
+        Path serverPath = pathServer.resolve(cloudMessage.getDirName()).normalize();
+        System.out.println(serverPath);
+        if (Files.isDirectory(serverPath) && !serverPath.toAbsolutePath().toString().equals(pathRoot.toAbsolutePath().toString())) {
+            pathServer = serverPath;
             sendList(ctx);
         }
     }
 
     private void sendList(ChannelHandlerContext ctx) throws IOException {
-        ctx.writeAndFlush(new ListMessage(currentDir));
+        ctx.writeAndFlush(new ListMessage(pathServer));
     }
 
     private void processFileMessage(FileMessage cloudMessage) throws IOException {
-        Files.write(currentDir.resolve(cloudMessage.getFileName()), cloudMessage.getBytes());
+        Files.write(pathServer.resolve(cloudMessage.getFileName()), cloudMessage.getBytes()); // Записали байты в память
     }
 
     private void processFileRequest(FileRequest cloudMessage, ChannelHandlerContext ctx) throws IOException {
-        Path path = currentDir.resolve(cloudMessage.getFileName());
+        Path path = pathServer.resolve(cloudMessage.getFileName());
         ctx.writeAndFlush(new FileMessage(path));
     }
-    private void processAuthorization(AuthMessage authMessage) {
-        login = authMessage.getLogin();
-        serverDir = Paths.get(currentDir + "\\" + login);
+    private void processAuthorization(AuthMessage authMessage, ChannelHandlerContext ctx) throws IOException {
+        AuthServer authServer = new AuthServer();
+        System.out.println(authServer.authorization(authMessage.getLogin(),
+                authMessage.getPassword()));
+        if(authServer.authorization(authMessage.getLogin(),
+                authMessage.getPassword())) {
+            login = authMessage.getLogin();
+            System.out.println(login);
+            pathServer = Paths.get(pathRoot + "\\" + login);
+            setPathServer(Paths.get(pathRoot + "\\" + login));
+            ctx.writeAndFlush(new AuthResponse(true));
+//            sendList(ctx);
+            System.out.println(new ListMessage(pathServer)  + "-Path");
+            ctx.writeAndFlush(new ListMessage(pathServer));
+        }
+    }
+    private void processRegistration(RegistrationMessage registrationMessage, ChannelHandlerContext ctx) throws IOException {
+        AuthServer authServer = new AuthServer();
+        login = registrationMessage.getLogin();
+        pathServer = Paths.get(pathRoot + "\\" + login);
+        System.out.println(pathServer);
+        Files.createDirectory(pathServer);
+        authServer.registration(registrationMessage.getName(), registrationMessage.getLogin(),
+                registrationMessage.getPassword());
+        ctx.writeAndFlush(new RegistrationResponse(true));
 
     }
+
+
 
 
 }

@@ -6,9 +6,13 @@ import io.netty.handler.codec.serialization.ObjectDecoderInputStream;
 import io.netty.handler.codec.serialization.ObjectEncoderOutputStream;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
+import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
 import org.example.command.*;
 
@@ -23,9 +27,8 @@ import java.util.ResourceBundle;
 @Slf4j
 
 public class Client implements Initializable {
-
     private Path clientDir;
-    private Path serverDir = Paths.get("data").toAbsolutePath();
+    private String serverPath;
     private static final int SIZE = 256;
     public ListView<String> clientView;
     public ListView<String> serverView;
@@ -33,22 +36,48 @@ public class Client implements Initializable {
     public TextField textFieldClient;
     private ObjectDecoderInputStream is;
     private ObjectEncoderOutputStream os;
-    private CloudMessageProcessor processor;
     private byte[] buf;
-    private ChannelHandlerContext ctx;
+    private Parent root;
+
 
     private void readLoop() {
         try {
             while (true) {
                 CloudMessage message = (CloudMessage) is.readObject();
-                log.info("received: {}",message);
-                processor.processMessage(message);
+                log.info("received: {}", message);
+                System.out.println(message);
+                System.out.println(" *Hello World*");
+                processMessage(message);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+    public void processMessage(CloudMessage message) throws IOException {
+        switch (message.getType()) {
+            case LIST:
+                processMessage((ListMessage) message);
+                break;
+            case FILE:
+                processMessage((FileMessage) message);
+                break;
+//            case AUTH:
+//                processMessage((AuthMessage) message);
+        }
+    }
 
+    public void processMessage(FileMessage message) throws IOException {
+        Files.write(clientDir.resolve(message.getFileName()), message.getBytes());
+        Platform.runLater(this::updateClientView);
+    }
+
+    public void processMessage(ListMessage message) {
+        Platform.runLater(() -> {
+            serverView.getItems().clear();
+            serverView.getItems().addAll(message.getFiles());
+            updateTextFieldServer(message.getPath());
+        });
+    }
 
     private void updateClientView() {
         try {
@@ -58,9 +87,6 @@ public class Client implements Initializable {
                     .forEach(f -> clientView.getItems().add(f));
             textFieldClient.clear();
             textFieldClient.appendText(String.valueOf(clientDir));
-            textFieldServer.clear();
-            textFieldServer.appendText(String.valueOf(serverDir));
-
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -69,12 +95,12 @@ public class Client implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         try {
+//            AuthController authController = new AuthController();
             buf = new byte[SIZE];
             clientDir = Paths.get(System.getProperty("user.home"));
             System.out.println(clientDir);
-            System.out.println(serverDir);
             updateClientView();
-            processor = new CloudMessageProcessor(clientDir,clientView, serverView, serverDir);
+//            Socket socket = AuthController.getSocket();
             Socket socket = new Socket("localhost", 8189);
             System.out.println("Network created...");
             os = new ObjectEncoderOutputStream(socket.getOutputStream());
@@ -92,7 +118,6 @@ public class Client implements Initializable {
     public void upload(ActionEvent actionEvent) throws IOException {
         String fileName = clientView.getSelectionModel().getSelectedItem();
         os.writeObject(new FileMessage(clientDir.resolve(fileName)));
-
     }
 
     public void download(ActionEvent actionEvent) throws IOException { // загрузить
@@ -102,7 +127,7 @@ public class Client implements Initializable {
 
     public void pathDownClient()  {
         Path current = clientDir;
-        if (current == clientDir.subpath(0, 2)) { // path.resolve("..").toAbsolutePath().
+        if (current == clientDir.subpath(0, 2)) {
             clientDir = current;
             updateClientView();
         } else {
@@ -112,17 +137,7 @@ public class Client implements Initializable {
     }
 
     public void pathDownServer() throws IOException {
-        if(serverDir.toString().equals(Paths.get("data").toAbsolutePath().toString())){
-            textFieldServer.clear();
-            textFieldServer.setText(serverDir.toString());
-        } else {
-            os.writeObject(new ChangePath(serverDir.resolve("..").normalize().toString()));
-            serverDir = serverDir.resolve("..").normalize();
-            textFieldServer.clear();
-            textFieldServer.setText(serverDir.toString());
-//            System.out.println(serverDir.resolve("..").normalize().toString());
-        }
-
+        os.writeObject(new ChangePath(".."));
     }
 
     private void initMouseLinkedClient() {
@@ -142,9 +157,6 @@ public class Client implements Initializable {
             if (e.getClickCount() == 2) {
                 try {
                     os.writeObject(new ChangePath(getItemServer()));
-                    serverDir = serverDir.resolve(getItemServer());
-                    textFieldServer.clear();
-                    textFieldServer.setText(serverDir.toString());
                 } catch (IOException ioException) {
                     ioException.printStackTrace();
                 }
@@ -161,6 +173,7 @@ public class Client implements Initializable {
         System.out.println(serverView.getSelectionModel().getSelectedItem());
         return serverView.getSelectionModel().getSelectedItem();
     }
+
     public void updateTextFieldServer(String path) {
         Platform.runLater(() -> {
             textFieldServer.clear();
