@@ -15,12 +15,9 @@ import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
 import org.example.command.*;
-import org.example.server.AuthServer;
-
 import java.io.IOException;
 import java.net.Socket;
 import java.net.URL;
-import java.util.Optional;
 import java.util.ResourceBundle;
 @Slf4j
 public class AuthController implements Initializable {
@@ -31,46 +28,28 @@ public class AuthController implements Initializable {
     public static Socket socket;
     @FXML
     private PasswordField password;
-
     @FXML
     private TextField login;
-
     @FXML
     private Button btn;
-
     @FXML
     private Button btnSignIn;
-
-
-
-
-
     @FXML
     private void click(ActionEvent event) {
         btn.setText("Enter again!");
     }
-
     @FXML
     void authButton(ActionEvent event) throws IOException {
-//        AuthServer authServer = new AuthServer();
         os.writeObject(new AuthMessage(login.getText(), password.getText()));
-//        btn.getScene().getWindow().hide();
     }
-
-
-
-
     @FXML
     void registration(ActionEvent event) throws IOException {
         btn.getScene().getWindow().hide();
-        root = FXMLLoader.load(getClass().getResource("layoutV2.fxml"));
-//        root = FXMLLoader.load(getClass().getResource("registrationField.fxml"));
+        root = FXMLLoader.load(getClass().getResource("registrationField.fxml"));
         Stage stage = new Stage();
         stage.setScene(new Scene(root));
         stage.show();
     }
-
-
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         try {
@@ -99,7 +78,6 @@ public class AuthController implements Initializable {
                     case AUTH_RESPONSE:
                         if (((AuthResponse) message).getAuthResponse()){
                             btnSignIn.setVisible(true);
-                            System.out.println("Hello world");
                             response = true;
                             System.out.println(((AuthResponse) message));
                             Platform.runLater(() -> {
@@ -136,9 +114,9 @@ public class AuthController implements Initializable {
         System.out.println("***");
     }
 
-    public static Socket getSocket() {
-        return socket;
-    }
+//    public static Socket getSocket() {
+//        return socket;
+//    }
 
     @FXML
     public void authButtonSignIn(ActionEvent event) throws IOException {

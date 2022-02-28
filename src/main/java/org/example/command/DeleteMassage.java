@@ -11,6 +11,10 @@ public class DeleteMassage implements CloudMessage {
         this.fileName = fileName;
     }
 
+    public String getFileName() {
+        return fileName;
+    }
+
     @Override
     public CommandType getType() {
         return CommandType.DELETE;

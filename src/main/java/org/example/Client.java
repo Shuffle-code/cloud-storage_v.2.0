@@ -6,16 +6,12 @@ import io.netty.handler.codec.serialization.ObjectDecoderInputStream;
 import io.netty.handler.codec.serialization.ObjectEncoderOutputStream;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
-import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
+import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
-import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
 import org.example.command.*;
-
 import java.io.IOException;
 import java.net.Socket;
 import java.net.URL;
@@ -27,8 +23,9 @@ import java.util.ResourceBundle;
 @Slf4j
 
 public class Client implements Initializable {
+    public Label enterNewDir;
+    public TextField nameNewDir;
     private Path clientDir;
-    private String serverPath;
     private static final int SIZE = 256;
     public ListView<String> clientView;
     public ListView<String> serverView;
@@ -37,7 +34,6 @@ public class Client implements Initializable {
     private ObjectDecoderInputStream is;
     private ObjectEncoderOutputStream os;
     private byte[] buf;
-    private Parent root;
 
 
     private void readLoop() {
@@ -61,8 +57,7 @@ public class Client implements Initializable {
             case FILE:
                 processMessage((FileMessage) message);
                 break;
-//            case AUTH:
-//                processMessage((AuthMessage) message);
+
         }
     }
 
@@ -95,12 +90,10 @@ public class Client implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         try {
-//            AuthController authController = new AuthController();
             buf = new byte[SIZE];
             clientDir = Paths.get(System.getProperty("user.home"));
             System.out.println(clientDir);
             updateClientView();
-//            Socket socket = AuthController.getSocket();
             Socket socket = new Socket("localhost", 8189);
             System.out.println("Network created...");
             os = new ObjectEncoderOutputStream(socket.getOutputStream());
@@ -155,10 +148,16 @@ public class Client implements Initializable {
     private void initMouseLinkedServer () {
         serverView.setOnMouseClicked(e -> {
             if (e.getClickCount() == 2) {
-                try {
-                    os.writeObject(new ChangePath(getItemServer()));
-                } catch (IOException ioException) {
-                    ioException.printStackTrace();
+                if (getItemServer() != null) {
+                    try {
+                        os.writeObject(new ChangePath(getItemServer()));
+                    } catch (IOException ioException) {
+                        ioException.printStackTrace();
+                }
+
+                }else {
+                    enterNewDir.setVisible(true);
+                    nameNewDir.setVisible(true);
                 }
             }
         });
@@ -179,6 +178,34 @@ public class Client implements Initializable {
             textFieldServer.clear();
             textFieldServer.setText(path);
         });
+    }
+
+    public void create() throws IOException {
+        os.writeObject(new CreateMassage(nameNewDir.getText()));
+        nameNewDir.clear();
+        enterNewDir.setVisible(false);
+        nameNewDir.setVisible(false);
+    }
+
+    public void delete () throws IOException {
+        String deleteFile = getItem();
+        if (deleteFile == null) {
+            String deleteFileServer = getItemServer();
+            if (deleteFileServer != null){
+                os.writeObject(new DeleteMassage(deleteFileServer));
+            }
+
+        } else {
+            Files.delete(clientDir.resolve(deleteFile));
+            updateClientView();
+        }
+
+
+    }
+    private void initMouseLinkedOneServer () {
+    }
+
+    public void host(ActionEvent event) throws IOException {
     }
 }
 

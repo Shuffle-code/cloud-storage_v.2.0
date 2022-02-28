@@ -13,7 +13,6 @@ public class RegistrationMessage implements CloudMessage{
         this.login = login;
         this.password = password;
     }
-
     public String getLogin() {
         return login;
     }
@@ -25,7 +24,6 @@ public class RegistrationMessage implements CloudMessage{
     public String getName() {
         return name;
     }
-
 
     @Override
     public CommandType getType() {

@@ -57,15 +57,15 @@ public class AuthServer {
         }
         return false;
     }
-    public String authorizationGetLogin(String login, String password) throws SQLException {
-        Connection connection = connectionM();
-        PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM user WHERE login = ? AND password = ?");
-        preparedStatement.setString(1, login);
-        preparedStatement.setString(2, password);
-        ResultSet resultSet = preparedStatement.executeQuery();
-        String dbLogin = resultSet.getString("login");
-        return dbLogin;
-    }
+//    public String authorizationGetLogin(String login, String password) throws SQLException {
+//        Connection connection = connectionM();
+//        PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM user WHERE login = ? AND password = ?");
+//        preparedStatement.setString(1, login);
+//        preparedStatement.setString(2, password);
+//        ResultSet resultSet = preparedStatement.executeQuery();
+//        String dbLogin = resultSet.getString("login");
+//        return dbLogin;
+//    }
 
 
     private boolean userExists(String login, Connection connection) {

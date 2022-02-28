@@ -30,25 +30,20 @@ public class RegisterController implements Initializable {
 
     @FXML
     private ResourceBundle resources;
-
     @FXML
     private URL location;
-
     @FXML
     private PasswordField password;
-
     @FXML
     private PasswordField repeatPassword;
-
     @FXML
     private TextField login;
-
     @FXML
     private TextField name;
-
     @FXML
     private Button btn;
-
+    @FXML
+    private Button button;
     @FXML
     private Hyperlink up;
 
@@ -69,12 +64,11 @@ public class RegisterController implements Initializable {
 
     @FXML
     void up(ActionEvent event) throws IOException {
-//        btn.getScene().getWindow().hide();
+        btn.getScene().getWindow().hide();
         root = FXMLLoader.load(getClass().getResource("passwordField.fxml"));
         Stage stage = new Stage();
         stage.setScene(new Scene(root));
         stage.show();
-
     }
 
     private void readLoop() {
@@ -86,8 +80,9 @@ public class RegisterController implements Initializable {
                     case REG_RESPONSE:
                         if (((RegistrationResponse) message).getRegResponse()) {
                             System.out.println(((RegistrationResponse) message).getRegResponse());
+                            btn.setVisible(true);
                             clickСhange();
-                            btn.setVisible(false);
+                            button.setVisible(false);
                         }
                 }
                 System.out.println(message);
@@ -101,13 +96,10 @@ public class RegisterController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         try {
-////            Socket socket = new Socket("localhost", 8189);
-            Socket socket = AuthController.getSocket();
+            Socket socket = new Socket("localhost", 8189);
+//            Socket socket = AuthController.getSocket();
             System.out.println("Network created...");
 
-//            os = new ObjectEncoderOutputStream(socket.getOutputStream());
-//            is = new ObjectDecoderInputStream(socket.getInputStream());
-//
             os = new ObjectEncoderOutputStream(socket.getOutputStream());
             is = new ObjectDecoderInputStream(socket.getInputStream());
             Thread readThread = new Thread(this::readLoop);

@@ -16,10 +16,6 @@ public class App extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-//        Parent parentAuth = FXMLLoader.load(getClass().getResource("passwordField.fxml"));//registrationField.fxml passwordField.fxml, layoutV2.fxml
-//        this.primaryStage = primaryStage;
-//        primaryStage.setScene(new Scene(parentAuth));
-//        primaryStage.show();
 
         Parent parent = FXMLLoader.load(getClass().getResource("passwordField.fxml"));
         this.primaryStage = primaryStage;

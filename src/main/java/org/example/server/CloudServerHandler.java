@@ -14,9 +14,6 @@ public class CloudServerHandler extends SimpleChannelInboundHandler<CloudMessage
     private static Path pathServer;
     private final Path pathRoot = Paths.get("data");
     private String login;
-    AuthServer authServer = new AuthServer();
-
-
 
 
     public void setPathServer(Path pathServer) {
@@ -28,7 +25,6 @@ public class CloudServerHandler extends SimpleChannelInboundHandler<CloudMessage
 //        pathServer = Paths.get(pathRoot + "\\" + login);
         System.out.println(pathServer + " - Path*");
         sendList(ctx);
-
     }
 
     @Override
@@ -49,9 +45,24 @@ public class CloudServerHandler extends SimpleChannelInboundHandler<CloudMessage
                 break;
             case REGISTRATION:
                 processRegistration((RegistrationMessage) cloudMessage, ctx);
-
+            case DELETE:
+                processDelete((DeleteMassage) cloudMessage, ctx);
+            case CREATE:
+                processCreate((CreateMassage) cloudMessage, ctx);
 
         }
+    }
+
+    private void processCreate(CreateMassage createMessage, ChannelHandlerContext ctx) throws IOException {
+        String dirName = createMessage.getDirName();
+        Path newDirPath = Paths.get(pathServer + "\\" + dirName);
+        Files.createDirectory(newDirPath);
+        sendList(ctx);
+    }
+
+    private void processDelete(DeleteMassage cloudMessage, ChannelHandlerContext ctx) throws IOException {
+        Files.delete(pathServer.resolve(cloudMessage.getFileName()));
+        sendList(ctx);
     }
 
     private void processPathRequest(ChangePath cloudMessage, ChannelHandlerContext ctx) throws IOException {
@@ -65,6 +76,7 @@ public class CloudServerHandler extends SimpleChannelInboundHandler<CloudMessage
 
     private void sendList(ChannelHandlerContext ctx) throws IOException {
         ctx.writeAndFlush(new ListMessage(pathServer));
+        System.out.println(new ListMessage(pathServer));
     }
 
     private void processFileMessage(FileMessage cloudMessage) throws IOException {

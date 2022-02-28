@@ -20,7 +20,6 @@ public class ListMessage implements CloudMessage {
         this.path = path.toString();
 
     }
-
     @Override
     public CommandType getType() {
         return CommandType.LIST;
