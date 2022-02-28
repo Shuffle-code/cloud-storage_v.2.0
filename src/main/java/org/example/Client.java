@@ -7,11 +7,11 @@ import io.netty.handler.codec.serialization.ObjectEncoderOutputStream;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import lombok.extern.slf4j.Slf4j;
 import org.example.command.*;
-
 import java.io.IOException;
 import java.net.Socket;
 import java.net.URL;
@@ -23,9 +23,9 @@ import java.util.ResourceBundle;
 @Slf4j
 
 public class Client implements Initializable {
-
+    public Label enterNewDir;
+    public TextField nameNewDir;
     private Path clientDir;
-    private Path serverDir = Paths.get("data").toAbsolutePath();
     private static final int SIZE = 256;
     public ListView<String> clientView;
     public ListView<String> serverView;
@@ -33,22 +33,46 @@ public class Client implements Initializable {
     public TextField textFieldClient;
     private ObjectDecoderInputStream is;
     private ObjectEncoderOutputStream os;
-    private CloudMessageProcessor processor;
     private byte[] buf;
-    private ChannelHandlerContext ctx;
+
 
     private void readLoop() {
         try {
             while (true) {
                 CloudMessage message = (CloudMessage) is.readObject();
-                log.info("received: {}",message);
-                processor.processMessage(message);
+                log.info("received: {}", message);
+                System.out.println(message);
+                System.out.println(" *Hello World*");
+                processMessage(message);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+    public void processMessage(CloudMessage message) throws IOException {
+        switch (message.getType()) {
+            case LIST:
+                processMessage((ListMessage) message);
+                break;
+            case FILE:
+                processMessage((FileMessage) message);
+                break;
 
+        }
+    }
+
+    public void processMessage(FileMessage message) throws IOException {
+        Files.write(clientDir.resolve(message.getFileName()), message.getBytes());
+        Platform.runLater(this::updateClientView);
+    }
+
+    public void processMessage(ListMessage message) {
+        Platform.runLater(() -> {
+            serverView.getItems().clear();
+            serverView.getItems().addAll(message.getFiles());
+            updateTextFieldServer(message.getPath());
+        });
+    }
 
     private void updateClientView() {
         try {
@@ -58,9 +82,6 @@ public class Client implements Initializable {
                     .forEach(f -> clientView.getItems().add(f));
             textFieldClient.clear();
             textFieldClient.appendText(String.valueOf(clientDir));
-            textFieldServer.clear();
-            textFieldServer.appendText(String.valueOf(serverDir));
-
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -72,9 +93,7 @@ public class Client implements Initializable {
             buf = new byte[SIZE];
             clientDir = Paths.get(System.getProperty("user.home"));
             System.out.println(clientDir);
-            System.out.println(serverDir);
             updateClientView();
-            processor = new CloudMessageProcessor(clientDir,clientView, serverView, serverDir);
             Socket socket = new Socket("localhost", 8189);
             System.out.println("Network created...");
             os = new ObjectEncoderOutputStream(socket.getOutputStream());
@@ -92,7 +111,6 @@ public class Client implements Initializable {
     public void upload(ActionEvent actionEvent) throws IOException {
         String fileName = clientView.getSelectionModel().getSelectedItem();
         os.writeObject(new FileMessage(clientDir.resolve(fileName)));
-
     }
 
     public void download(ActionEvent actionEvent) throws IOException { // загрузить
@@ -102,7 +120,7 @@ public class Client implements Initializable {
 
     public void pathDownClient()  {
         Path current = clientDir;
-        if (current == clientDir.subpath(0, 2)) { // path.resolve("..").toAbsolutePath().
+        if (current == clientDir.subpath(0, 2)) {
             clientDir = current;
             updateClientView();
         } else {
@@ -112,23 +130,16 @@ public class Client implements Initializable {
     }
 
     public void pathDownServer() throws IOException {
-        os.writeObject(new ChangePath(serverDir.resolve("..").normalize().toString()));
-        serverDir = serverDir.resolve("..").normalize();
-        textFieldServer.clear();
-        textFieldServer.setText(serverDir.toString());
-        System.out.println(serverDir.resolve("..").normalize().toString());
-
+        os.writeObject(new ChangePath(".."));
     }
 
     private void initMouseLinkedClient() {
         clientView.setOnMouseClicked(e -> {
             if (e.getClickCount() == 2) {
                 Path current = clientDir.resolve(getItem());
-                if (getItem() != null) {
-                    if (Files.isDirectory(current)) {
-                        clientDir = current;
-                        Platform.runLater(this::updateClientView);
-                    }
+              if (Files.isDirectory(current)) {
+                    clientDir = current;
+                    Platform.runLater(this::updateClientView);
                 }
             }
         });
@@ -137,13 +148,16 @@ public class Client implements Initializable {
     private void initMouseLinkedServer () {
         serverView.setOnMouseClicked(e -> {
             if (e.getClickCount() == 2) {
-                try {
-                    os.writeObject(new ChangePath(getItemServer()));
-                    serverDir = serverDir.resolve(getItemServer());
-                    textFieldServer.clear();
-                    textFieldServer.setText(serverDir.toString());
-                } catch (IOException ioException) {
-                    ioException.printStackTrace();
+                if (getItemServer() != null) {
+                    try {
+                        os.writeObject(new ChangePath(getItemServer()));
+                    } catch (IOException ioException) {
+                        ioException.printStackTrace();
+                }
+
+                }else {
+                    enterNewDir.setVisible(true);
+                    nameNewDir.setVisible(true);
                 }
             }
         });
@@ -158,11 +172,40 @@ public class Client implements Initializable {
         System.out.println(serverView.getSelectionModel().getSelectedItem());
         return serverView.getSelectionModel().getSelectedItem();
     }
+
     public void updateTextFieldServer(String path) {
         Platform.runLater(() -> {
             textFieldServer.clear();
             textFieldServer.setText(path);
         });
+    }
+
+    public void create() throws IOException {
+        os.writeObject(new CreateMassage(nameNewDir.getText()));
+        nameNewDir.clear();
+        enterNewDir.setVisible(false);
+        nameNewDir.setVisible(false);
+    }
+
+    public void delete () throws IOException {
+        String deleteFile = getItem();
+        if (deleteFile == null) {
+            String deleteFileServer = getItemServer();
+            if (deleteFileServer != null){
+                os.writeObject(new DeleteMassage(deleteFileServer));
+            }
+
+        } else {
+            Files.delete(clientDir.resolve(deleteFile));
+            updateClientView();
+        }
+
+
+    }
+    private void initMouseLinkedOneServer () {
+    }
+
+    public void host(ActionEvent event) throws IOException {
     }
 }
 
